@@ -52,4 +52,9 @@
     </div>
     <button type="submit" class="btn btn-success" [disabled]="employeeForm.invalid">Submit</button>
   </form>
+  <div *ngIf="error">
+    <div class="alert alert-danger">
+      {{error}}
+    </div>
+  </div>
 </div>

@@ -3,13 +3,15 @@ import { AbstractControl, FormBuilder, Validators, ReactiveFormsModule } from "@
 import {EmployeeService} from "../service/employee.service";
 import { Router, RouterLink } from "@angular/router";
 import {Employee} from "../model/employee";
+import {NgIf} from "@angular/common";
+import {Timestamp} from "@angular/fire/firestore";
 
 @Component({
     selector: 'app-employee',
     templateUrl: './employee.component.html',
     styleUrls: ['./employee.component.css'],
     standalone: true,
-    imports: [RouterLink, ReactiveFormsModule]
+  imports: [RouterLink, ReactiveFormsModule, NgIf]
 })
 export class EmployeeComponent {
   private builder: FormBuilder = inject(FormBuilder);
@@ -23,6 +25,7 @@ export class EmployeeComponent {
     gender: ['', Validators.pattern('^[MFX]$')],
     email: ['', Validators.email]
   });
+  error = undefined;
 
   get name(): AbstractControl<string> {return <AbstractControl<string>>this.employeeForm.get('name'); }
   get dateOfBirth(): AbstractControl<string> {return <AbstractControl<string>>this.employeeForm.get('dateOfBirth'); }
@@ -32,14 +35,21 @@ export class EmployeeComponent {
   get email(): AbstractControl<string> {return <AbstractControl<string>>this.employeeForm.get('email'); }
 
   onSubmit() {
+    console.log("onSubmit called");
     const employee: Employee = new Employee(this.name.value,
-      new Date(this.dateOfBirth.value),
+      Timestamp.fromDate(new Date(this.dateOfBirth.value)),
       this.city.value,
       this.salary.value,
       this.gender.value,
       this.email.value);
-    this.employeeService.addEmployee(employee);
-    this.employeeForm.reset();
-    this.router.navigate(['/employees']).then(() => {});
+    this.employeeService.addEmployee(employee).subscribe({
+      next: () => {
+        this.employeeForm.reset();
+        this.router.navigate(['/employees']).then(() => {});
+      },
+      error: (err) => {
+        this.error = err;
+      }
+    });
   }
 }
